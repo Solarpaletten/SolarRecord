@@ -38,6 +38,16 @@ export async function POST(req: NextRequest) {
       buffer.length
     );
 
+    // Validate file size (example limit: 500MB)
+
+    const MAX_FILE_SIZE = 500 * 1024 * 1024; // 500MB
+    if (file.size > MAX_FILE_SIZE) {
+      return NextResponse.json(
+        { error: 'File too large. Max 500MB' },
+        { status: 413 }
+      );
+    }
+
     console.log(`✅ Upload complete: ${recordingId}`);
     console.log(`   Starting background processing...`);
 
