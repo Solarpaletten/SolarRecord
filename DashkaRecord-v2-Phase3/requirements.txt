@@ -1,0 +1,19 @@
+## Python Requirements for DashkaRecord v2.0.0-alpha
+## Phase 3: Whisper Transcription (subprocess mode)
+
+# Whisper AI for transcription
+openai-whisper==20231117
+
+# Dependencies
+torch==2.1.2
+torchaudio==2.1.2
+
+# Optional: For better performance
+# ffmpeg-python==0.2.0
+
+## Installation:
+## pip install -r requirements.txt --break-system-packages
+## OR
+## python3 -m venv venv
+## source venv/bin/activate  # On Windows: venv\Scripts\activate
+## pip install -r requirements.txt
