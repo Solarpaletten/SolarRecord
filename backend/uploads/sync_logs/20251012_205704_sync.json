@@ -1,0 +1,10 @@
+[
+  {
+    "recording_id": "20251012_205704",
+    "status": "failed",
+    "timestamp": "2025-10-12T20:59:26.306484",
+    "solar_core_response": null,
+    "error_message": "Solar Core is not reachable",
+    "retry_count": 0
+  }
+]

@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import ShareButton from "@/components/ShareButton";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
@@ -15,6 +16,9 @@ interface Recording {
   pdf_path?: string;
   translated: boolean;
   translation_path?: string;
+  synced?: boolean;
+  sync_status?: string;
+  solar_core_id?: string;
 }
 
 export default function RecordsPage() {
@@ -64,7 +68,6 @@ export default function RecordsPage() {
         throw new Error("Translation failed");
       }
       
-      // Refresh recordings list
       await fetchRecordings();
       
     } catch (err) {
@@ -89,7 +92,6 @@ export default function RecordsPage() {
         throw new Error("Deletion failed");
       }
       
-      // Refresh recordings list
       await fetchRecordings();
       
     } catch (err) {
@@ -100,6 +102,15 @@ export default function RecordsPage() {
 
   const downloadPDF = (recordingId: string) => {
     window.open(`${API_URL}/download/${recordingId}/pdf`, "_blank");
+  };
+
+  // НОВЫЕ функции для MP4/WebM
+  const downloadMP4 = (recordingId: string) => {
+    window.open(`${API_URL}/download/${recordingId}/mp4`, "_blank");
+  };
+
+  const downloadWebM = (recordingId: string) => {
+    window.open(`${API_URL}/download/${recordingId}/webm`, "_blank");
   };
 
   const formatDate = (dateString: string) => {
@@ -182,7 +193,7 @@ export default function RecordsPage() {
         {/* Empty State */}
         {!loading && recordings.length === 0 && (
           <div className="bg-white rounded-lg shadow p-12 text-center">
-            <div className="text-6xl mb-4">📹</div>
+            <div className="text-6xl mb-4">🎥</div>
             <h2 className="text-2xl font-semibold text-gray-800 mb-2">
               No recordings yet
             </h2>
@@ -212,7 +223,14 @@ export default function RecordsPage() {
                     <h3 className="font-semibold text-lg truncate">
                       Recording {recording.id}
                     </h3>
-                    {getStatusBadge(recording)}
+                    <div className="flex gap-2">
+                      {getStatusBadge(recording)}
+                      {recording.synced && (
+                        <span className="px-2 py-1 text-xs font-semibold rounded-full bg-white bg-opacity-20 text-white">
+                          🔗 Synced
+                        </span>
+                      )}
+                    </div>
                   </div>
                   <p className="text-blue-100 text-sm">
                     {formatDate(recording.created_at)}
@@ -225,7 +243,7 @@ export default function RecordsPage() {
                   <div className="flex items-center space-x-4 text-sm text-gray-600">
                     {recording.language && (
                       <span className="flex items-center space-x-1">
-                        <span>🌐</span>
+                        <span>🌍</span>
                         <span>{recording.language.toUpperCase()}</span>
                       </span>
                     )}
@@ -237,7 +255,7 @@ export default function RecordsPage() {
                     )}
                   </div>
 
-                  {/* Actions */}
+                  {/* Actions Grid */}
                   <div className="grid grid-cols-2 gap-2">
                     {/* View Video */}
                     <a
@@ -322,13 +340,48 @@ export default function RecordsPage() {
                     )}
                   </div>
 
-                  {/* Delete Button */}
-                  <button
-                    onClick={() => deleteRecording(recording.id)}
-                    className="w-full mt-2 px-4 py-2 rounded-lg bg-gray-100 hover:bg-red-50 text-gray-600 hover:text-red-600 font-medium transition-all text-sm"
-                  >
-                    🗑️ Delete
-                  </button>
+                  {/* НОВОЕ: Download Row - MP4 и WebM */}
+                  <div className="grid grid-cols-2 gap-2 pt-2 border-t border-gray-200">
+                    <button
+                      onClick={() => downloadMP4(recording.id)}
+                      className="flex items-center justify-center space-x-2 px-4 py-2 rounded-lg bg-orange-50 hover:bg-orange-100 text-orange-700 font-medium transition-all text-sm"
+                      title="Download MP4 (Telegram compatible)"
+                    >
+                      <span>📱</span>
+                      <span>MP4</span>
+                    </button>
+                    
+                    <button
+                      onClick={() => downloadWebM(recording.id)}
+                      className="flex items-center justify-center space-x-2 px-4 py-2 rounded-lg bg-gray-50 hover:bg-gray-100 text-gray-700 font-medium transition-all text-sm"
+                      title="Download WebM (original)"
+                    >
+                      <span>💾</span>
+                      <span>WebM</span>
+                    </button>
+                  </div>
+
+                  {/* Share & Delete Row */}
+                  <div className="flex gap-2 pt-2">
+                    <ShareButton recording={recording} />
+                    
+                    <button
+                      onClick={() => deleteRecording(recording.id)}
+                      className="flex-1 px-4 py-2 rounded-lg bg-gray-100 hover:bg-red-50 text-gray-600 hover:text-red-600 font-medium transition-all text-sm"
+                    >
+                      🗑️ Delete
+                    </button>
+                  </div>
+
+                  {/* Solar Core Sync Info */}
+                  {recording.solar_core_id && (
+                    <div className="pt-3 border-t border-gray-200">
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="text-gray-500">Solar Core ID:</span>
+                        <span className="font-mono text-blue-600">{recording.solar_core_id}</span>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             ))}
@@ -340,9 +393,23 @@ export default function RecordsPage() {
           <div className="mt-6 bg-white rounded-lg shadow p-4 text-center text-gray-600">
             <p>
               Total Recordings: <span className="font-semibold text-blue-600">{recordings.length}</span>
+              {recordings.filter(r => r.synced).length > 0 && (
+                <span className="ml-4">
+                  Synced: <span className="font-semibold text-green-600">{recordings.filter(r => r.synced).length}</span>
+                </span>
+              )}
             </p>
           </div>
         )}
+
+        {/* НОВОЕ: Info Banner про MP4 */}
+        <div className="mt-6 bg-gradient-to-r from-orange-500 to-red-500 rounded-lg shadow-lg p-6 text-white">
+          <h3 className="text-lg font-semibold mb-2">💡 Tip for Telegram</h3>
+          <p className="text-sm text-orange-50">
+            Use the <strong>"MP4"</strong> button to download videos that work in Telegram, WhatsApp, and on iPhone. 
+            WebM files are original quality but may not work in some apps.
+          </p>
+        </div>
       </div>
     </div>
   );

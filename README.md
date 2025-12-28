@@ -1,3 +1,8 @@
+
+cd backend && python3 -m venv venv && source venv/bin/activate
+
+
+
 # 🎥 Solar Recorder v1.1
 
 Local screen recording platform with AI-powered transcription, translation, and PDF generation.
