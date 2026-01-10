@@ -73,7 +73,7 @@ export default function ShareButton({ recording }: ShareButtonProps) {
         created_at: recording.created_at
       };
 
-      const syncResponse = await fetch("/api/sync", {
+      const syncResponse = await fetch("/api/recording/sync", {
         method: "POST",
         headers: {
           "Content-Type": "application/json"

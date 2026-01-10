@@ -5,7 +5,10 @@
 
 import { promises as fs } from 'fs';
 import path from 'path';
-import { RecordingMetadata, ProcessingStatus, Screenshot } from './types';
+import { ProcessingStatus, RecordingMetadata, Screenshot } from '../types/recording';
+
+// Base upload directory (can be configured via env variable)
+const UPLOAD_DIR = process.env.UPLOAD_DIR || path.join(process.cwd(), 'uploads');
 
 // Directories
 const UPLOAD_BASE = path.join(process.cwd(), 'uploads');
@@ -17,9 +20,6 @@ const METADATA_DIR = path.join(UPLOAD_BASE, 'metadata');
 const SYNC_LOGS_DIR = path.join(UPLOAD_BASE, 'sync_logs');
 const FRAMES_DIR = path.join(UPLOAD_BASE, 'frames');
 
-/**
- * Ensure all upload directories exist
- */
 export async function ensureDirs(): Promise<void> {
   const dirs = [
     VIDEO_DIR,
@@ -36,9 +36,6 @@ export async function ensureDirs(): Promise<void> {
   }
 }
 
-/**
- * Create unique recording ID
- */
 export function createRecordingId(): string {
   const now = new Date();
   return now.toISOString()
@@ -47,28 +44,22 @@ export function createRecordingId(): string {
     .split('.')[0];
 }
 
-/**
- * Save WebM file to storage
- */
 export async function saveWebm(
   id: string,
   fileBuffer: Buffer
 ): Promise<string> {
   await ensureDirs();
-  
+
   const filename = `${id}.webm`;
   const filepath = path.join(VIDEO_DIR, filename);
-  
+
   await fs.writeFile(filepath, fileBuffer);
-  
+
   console.log(`✅ Saved WebM: ${filepath} (${fileBuffer.length} bytes)`);
-  
+
   return filepath;
 }
 
-/**
- * Create initial metadata for new recording
- */
 export async function createMetadata(
   id: string,
   filename: string,
@@ -76,7 +67,7 @@ export async function createMetadata(
   fileSizeBytes: number
 ): Promise<RecordingMetadata> {
   await ensureDirs();
-  
+
   const metadata: RecordingMetadata = {
     id,
     filename,
@@ -97,15 +88,12 @@ export async function createMetadata(
   };
 
   await writeMetadata(id, metadata);
-  
+
   console.log(`✅ Created metadata: ${id}`);
-  
+
   return metadata;
 }
 
-/**
- * Read metadata from JSON file
- */
 export async function readMetadata(id: string): Promise<RecordingMetadata | null> {
   try {
     const metadataPath = path.join(METADATA_DIR, `${id}.json`);
@@ -119,17 +107,14 @@ export async function readMetadata(id: string): Promise<RecordingMetadata | null
   }
 }
 
-/**
- * Write metadata to JSON file
- */
 export async function writeMetadata(
   id: string,
   metadata: RecordingMetadata
 ): Promise<void> {
   await ensureDirs();
-  
+
   metadata.updatedAt = new Date().toISOString();
-  
+
   const metadataPath = path.join(METADATA_DIR, `${id}.json`);
   await fs.writeFile(
     metadataPath,
@@ -138,9 +123,6 @@ export async function writeMetadata(
   );
 }
 
-/**
- * Update metadata fields
- */
 export async function updateMetadata(
   id: string,
   updates: Partial<RecordingMetadata>
@@ -152,22 +134,19 @@ export async function updateMetadata(
 
   const updated = { ...metadata, ...updates };
   await writeMetadata(id, updated);
-  
+
   return updated;
 }
 
-/**
- * List all recordings (sorted by creation date desc)
- */
 export async function listRecordings(): Promise<RecordingMetadata[]> {
   await ensureDirs();
-  
+
   try {
     const files = await fs.readdir(METADATA_DIR);
     const metadataFiles = files.filter(f => f.endsWith('.json'));
-    
+
     const recordings: RecordingMetadata[] = [];
-    
+
     for (const file of metadataFiles) {
       const id = file.replace('.json', '');
       const metadata = await readMetadata(id);
@@ -175,12 +154,12 @@ export async function listRecordings(): Promise<RecordingMetadata[]> {
         recordings.push(metadata);
       }
     }
-    
+
     // Sort by creation date (newest first)
-    recordings.sort((a, b) => 
+    recordings.sort((a, b) =>
       new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
     );
-    
+
     return recordings;
   } catch (error) {
     console.error('Error listing recordings:', error);
@@ -188,9 +167,6 @@ export async function listRecordings(): Promise<RecordingMetadata[]> {
   }
 }
 
-/**
- * Delete recording and all associated files
- */
 export async function deleteRecording(id: string): Promise<boolean> {
   try {
     const metadata = await readMetadata(id);
@@ -198,7 +174,7 @@ export async function deleteRecording(id: string): Promise<boolean> {
       return false;
     }
 
-    // Delete all associated files
+   
     const filesToDelete = [
       metadata.videoPath,
       metadata.transcriptPath,
@@ -229,7 +205,7 @@ export async function deleteRecording(id: string): Promise<boolean> {
     }
 
     console.log(`✅ Recording ${id} deleted successfully`);
-    
+
     return true;
   } catch (error) {
     console.error(`❌ Error deleting recording ${id}:`, error);
@@ -237,9 +213,6 @@ export async function deleteRecording(id: string): Promise<boolean> {
   }
 }
 
-/**
- * Save screenshot for recording
- */
 export async function saveScreenshot(
   recordingId: string,
   filename: string,
@@ -247,13 +220,13 @@ export async function saveScreenshot(
   timestamp: number
 ): Promise<Screenshot> {
   await ensureDirs();
-  
+
   const recordingFramesDir = path.join(FRAMES_DIR, recordingId);
   await fs.mkdir(recordingFramesDir, { recursive: true });
-  
+
   const filepath = path.join(recordingFramesDir, filename);
   await fs.writeFile(filepath, fileBuffer);
-  
+
   const screenshot: Screenshot = {
     filename,
     timestamp,
@@ -261,22 +234,19 @@ export async function saveScreenshot(
     capturedAt: new Date().toISOString(),
     sizeBytes: fileBuffer.length,
   };
-  
+
   // Update metadata
   const metadata = await readMetadata(recordingId);
   if (metadata) {
     metadata.screenshots.push(screenshot);
     await writeMetadata(recordingId, metadata);
   }
-  
+
   console.log(`✅ Screenshot saved: ${filepath} (${fileBuffer.length} bytes)`);
-  
+
   return screenshot;
 }
 
-/**
- * Get file stats
- */
 export async function getFileStats(filepath: string) {
   try {
     const stats = await fs.stat(filepath);
@@ -296,9 +266,6 @@ export async function getFileStats(filepath: string) {
   }
 }
 
-/**
- * Get paths for recording files
- */
 export function getRecordingPaths(id: string) {
   return {
     video: path.join(VIDEO_DIR, `${id}.webm`),
@@ -311,9 +278,6 @@ export function getRecordingPaths(id: string) {
   };
 }
 
-/**
- * Update processing status
- */
 export async function updateProcessingStatus(
   id: string,
   status: ProcessingStatus,
@@ -330,13 +294,10 @@ export async function updateProcessingStatus(
       message,
     },
   });
-  
+
   console.log(`📊 ${id}: ${status} - ${step} (${stepNumber}/4)`);
 }
 
-/**
- * Record processing error
- */
 export async function recordProcessingError(
   id: string,
   step: string,
@@ -350,6 +311,6 @@ export async function recordProcessingError(
       timestamp: new Date().toISOString(),
     },
   });
-  
+
   console.error(`❌ ${id}: Error at ${step} - ${errorMessage}`);
 }

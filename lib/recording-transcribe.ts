@@ -9,10 +9,10 @@
  */
 
 import { exec } from 'child_process';
-import { promisify } from 'util';
 import { promises as fs } from 'fs';
 import path from 'path';
-import { TranscribeResult, WhisperMode, WhisperConfig } from './types';
+import { promisify } from 'util';
+import { TranscribeResult, WhisperConfig, WhisperMode } from '../types/recording';
 import { getRecordingPaths } from './storage';
 
 const execPromise = promisify(exec);
@@ -30,7 +30,7 @@ export async function transcribe(
   language?: string
 ): Promise<{ textPath: string; segmentsPath: string; language: string; confidence: number }> {
   console.log(`🎙️ Starting transcription for ${recordingId} (mode: ${WHISPER_MODE})`);
-  
+
   const config: WhisperConfig = {
     mode: WHISPER_MODE,
     model: WHISPER_MODEL,
@@ -55,7 +55,7 @@ export async function transcribe(
 
   // Save results to files
   const paths = getRecordingPaths(recordingId);
-  
+
   // Save main transcript
   await fs.writeFile(
     paths.transcript,
@@ -67,7 +67,7 @@ export async function transcribe(
   const segmentsText = result.segments
     .map(s => `[${formatTime(s.start)} --> ${formatTime(s.end)}] ${s.text}`)
     .join('\n');
-  
+
   await fs.writeFile(paths.transcriptSegments, segmentsText, 'utf-8');
 
   console.log(`✅ Transcription complete: ${result.language} (${result.segments.length} segments)`);
@@ -88,7 +88,7 @@ async function transcribeSubprocess(
   config: WhisperConfig
 ): Promise<TranscribeResult> {
   const scriptPath = path.join(process.cwd(), 'scripts/transcribe.py');
-  
+
   // Check if script exists
   try {
     await fs.access(scriptPath);
@@ -97,9 +97,9 @@ async function transcribeSubprocess(
   }
 
   const outTextPath = `${videoPath}.transcript.json`;
-  
+
   let command = `python3 ${scriptPath} --input "${videoPath}" --output "${outTextPath}" --model ${config.model}`;
-  
+
   if (config.language) {
     command += ` --language ${config.language}`;
   }
@@ -120,7 +120,7 @@ async function transcribeSubprocess(
     const result = JSON.parse(resultContent);
 
     // Clean up temp file
-    await fs.unlink(outTextPath).catch(() => {});
+    await fs.unlink(outTextPath).catch(() => { });
 
     return {
       text: result.text,
@@ -148,7 +148,7 @@ async function transcribeNode(
     'whisper-node mode not implemented. Install whisper-node or use subprocess mode.\n' +
     'Set WHISPER_MODE=subprocess in .env.local'
   );
-  
+
   /* Future implementation:
   const { WhisperModel } = await import('whisper-node');
   const whisper = new WhisperModel({ modelName: config.model });
@@ -165,7 +165,7 @@ async function transcribeCloud(
   config: WhisperConfig
 ): Promise<TranscribeResult> {
   const apiKey = process.env.OPENAI_API_KEY;
-  
+
   if (!apiKey) {
     throw new Error(
       'OpenAI API key not found. Set OPENAI_API_KEY in .env.local or use subprocess mode.'
@@ -181,11 +181,11 @@ async function transcribeCloud(
     const formData = new FormData();
     formData.append('file', new Blob([fileBuffer]), filename);
     formData.append('model', 'whisper-1');
-    
+
     if (config.language) {
       formData.append('language', config.language);
     }
-    
+
     formData.append('response_format', 'verbose_json');
 
     // Call OpenAI API
@@ -224,7 +224,7 @@ function formatTime(seconds: number): string {
   const hours = Math.floor(seconds / 3600);
   const minutes = Math.floor((seconds % 3600) / 60);
   const secs = Math.floor(seconds % 60);
-  
+
   if (hours > 0) {
     return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   }
@@ -262,10 +262,10 @@ export async function checkWhisperAvailability(): Promise<{
       try {
         const scriptPath = path.join(process.cwd(), 'scripts/transcribe.py');
         await fs.access(scriptPath);
-        
+
         // Try to run python
         await execPromise('python3 --version');
-        
+
         return {
           available: true,
           mode: 'subprocess',
@@ -290,8 +290,8 @@ export async function checkWhisperAvailability(): Promise<{
       return {
         available: !!process.env.OPENAI_API_KEY,
         mode: 'cloud',
-        message: process.env.OPENAI_API_KEY 
-          ? 'OpenAI API key configured' 
+        message: process.env.OPENAI_API_KEY
+          ? 'OpenAI API key configured'
           : 'OPENAI_API_KEY not set in environment',
       };
 

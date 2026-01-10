@@ -2,7 +2,7 @@
 
 **Phase 3: Real Backend Implementation - COMPLETE** ✅
 
-Next.js Monorepo with full AI transcription, PDF generation, and MP4 conversion.
+Next.js Monorepo with full AI transcription and MP4 conversion.
 
 ---
 
@@ -61,7 +61,6 @@ Access: **http://localhost:3000**
 | `/api/files/[id]` | GET/DELETE | Get/Delete recording |
 | `/api/download/[id]/webm` | GET | Download WebM |
 | `/api/download/[id]/mp4` | GET | Download MP4 |
-| `/api/download/[id]/pdf` | GET | Download PDF |
 | `/api/translate` | POST | Translate transcript |
 | `/api/sync` | POST | Sync to Solar Core |
 | `/api/screenshot` | POST | Upload screenshot |
@@ -73,9 +72,8 @@ Access: **http://localhost:3000**
 ```
 Upload → Background Processing:
   1. Transcribe (Whisper) → .txt
-  2. Generate PDF → .pdf
-  3. Convert MP4 (FFmpeg) → .mp4
-  4. Update metadata → complete
+  2. Convert MP4 (FFmpeg) → .mp4
+  3. Update metadata → complete
 ```
 
 ---
@@ -100,7 +98,6 @@ npm run dev
 ls uploads/metadata/*.json
 ls uploads/video/*.webm
 ls uploads/transcripts/*.txt
-ls uploads/pdf/*.pdf
 ls uploads/mp4/*.mp4
 ```
 
@@ -140,7 +137,7 @@ ffmpeg -version
 ## 📦 Dependencies
 
 **Node.js:**
-- next, react, fluent-ffmpeg, pdfkit
+- next, react, fluent-ffmpeg
 
 **Python:**
 - openai-whisper, torch

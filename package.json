@@ -12,16 +12,18 @@
     "next": "14.1.0",
     "react": "^18",
     "react-dom": "^18",
+    "mapbox-gl": "^3.17.0",
+    "prisma": "^5.22.0",
     "fluent-ffmpeg": "^2.1.2",
     "@ffmpeg-installer/ffmpeg": "^1.1.0",
-    "pdfkit": "^0.13.0"
+    "ffmpeg-static": "^5.x.x",
+    "@google-cloud/speech": "^6.x.x"
   },
   "devDependencies": {
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",
     "@types/fluent-ffmpeg": "^2.1.24",
-    "@types/pdfkit": "^0.13.4",
     "autoprefixer": "^10.0.1",
     "eslint": "^8",
     "eslint-config-next": "14.1.0",

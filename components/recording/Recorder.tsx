@@ -1,6 +1,7 @@
 "use client";
 import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { startRecording } from '@/lib/recording-core';
 
 export default function Recorder() {
   const [recording, setRecording] = useState(false);
@@ -212,7 +213,7 @@ export default function Recorder() {
       
       console.log(`📤 Uploading screenshot: ${filename} (${blob.size} bytes)`);
       
-      const response = await fetch('/api/screenshot', {
+      const response = await fetch('/api/recording/screenshot', {
         method: 'POST',
         body: formData
       });
@@ -395,7 +396,7 @@ export default function Recorder() {
       
       console.log(`📤 Uploading ${blob.size} bytes...`);
       
-      const response = await fetch('/api/upload', {
+      const response = await fetch('/api/recording/upload', {
         method: "POST",
         body: formData
       });

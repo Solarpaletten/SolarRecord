@@ -1,7 +1,4 @@
-/**
- * TypeScript Types for DashkaRecord v2.0.0-alpha
- * Phase 3: Real Backend Implementation
- */
+
 
 export interface RecordingMetadata {
   id: string;
@@ -12,7 +9,6 @@ export interface RecordingMetadata {
   // Paths
   videoPath: string;
   transcriptPath?: string;
-  pdfPath?: string;
   mp4Path?: string;
   translationPath?: string;
   
@@ -50,7 +46,6 @@ export type ProcessingStatus =
   | 'uploaded'
   | 'transcribing'
   | 'transcribed'
-  | 'generating_pdf'
   | 'converting_mp4'
   | 'complete'
   | 'error';
@@ -84,7 +79,6 @@ export interface RecorderSyncRequest {
   video: string;
   transcript: string;
   translation?: string;
-  pdf: string;
   createdAt: string;
   duration?: number;
   fileSize?: number;
@@ -143,4 +137,27 @@ export interface ApiError {
   error: string;
   details?: string;
   timestamp: string;
+}
+
+export interface Recording {
+  id: string;
+  filename: string;
+  createdAt: Date;
+  duration?: number;
+  transcription?: string;
+  translation?: string;
+  status: RecordingStatus;
+}
+
+export type RecordingStatus =
+  | 'uploading'
+  | 'processing'
+  | 'transcribing'
+  | 'completed'
+  | 'error';
+
+export interface TranscriptSegment {
+  start: number;
+  end: number;
+  text: string;
 }

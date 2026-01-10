@@ -35,7 +35,7 @@ export default function RecordsPage() {
       setLoading(true);
       setError(null);
       
-      const response = await fetch('/api/files');
+      const response = await fetch('/api/recording/files');
       
       if (!response.ok) {
         throw new Error(`Failed to fetch recordings: ${response.status}`);

@@ -4,11 +4,11 @@
  */
 
 import { promises as fs } from 'fs';
-import { TranslateRequest, TranslateResult } from './types';
-import { readMetadata, updateMetadata, getRecordingPaths } from './storage';
+import { TranslateRequest, TranslateResult } from '../types/recording';
+import { getRecordingPaths, readMetadata, updateMetadata } from './storage';
 
 const DEEPSEEK_API_KEY = process.env.DEEPSEEK_API_KEY || '';
-const DEEPSEEK_API_URL = 'https://api.deepseek.com/v1/chat/completions';
+const DEEPSEEK_API_URL = 'https://api.deepseek.ai/v1/chat/completions';
 
 /**
  * Translate transcript using DeepSeek API
@@ -25,12 +25,12 @@ export async function translateTranscript(
 
   // Read transcript
   const transcriptContent = await fs.readFile(metadata.transcriptPath, 'utf-8');
-  
+
   // Parse metadata lines
   const lines = transcriptContent.split('\n');
   let transcriptText = transcriptContent;
   let sourceLanguage = metadata.language || 'auto';
-  
+
   if (lines[0].startsWith('[Language:')) {
     sourceLanguage = lines[0].replace('[Language:', '').replace(']', '').trim();
     transcriptText = lines.slice(3).join('\n');
@@ -46,7 +46,7 @@ export async function translateTranscript(
   // Save translation
   const paths = getRecordingPaths(request.recordingId);
   const translationPath = paths.transcript.replace('.txt', `_${request.targetLanguage}.txt`);
-  
+
   await fs.writeFile(
     translationPath,
     `[Original Language: ${sourceLanguage}]\n[Translated to: ${request.targetLanguage}]\n\n${translatedText}`,
