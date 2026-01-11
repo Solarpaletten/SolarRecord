@@ -1,7 +1,6 @@
 "use client";
 import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { startRecording } from '@/lib/recording-core';
 
 export default function Recorder() {
   const [recording, setRecording] = useState(false);
@@ -126,7 +125,7 @@ export default function Recorder() {
       const videoTrack = displayStreamRef.current.getVideoTracks()[0];
       
       if (typeof ImageCapture !== 'undefined') {
-        const imageCapture = new ImageCapture(videoTrack);
+        const imageCapture = new (window as any).ImageCapture(videoTrack);
         const bitmap = await imageCapture.grabFrame();
         
         const canvas = document.createElement('canvas');
@@ -419,7 +418,7 @@ export default function Recorder() {
   };
 
   const viewRecordings = () => {
-    router.push("/records");
+    router.push("/recording/records");
   };
 
   const resetRecording = () => {

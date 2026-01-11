@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { syncToSolarCore } from '@/lib/solar-core';
+import { syncToSolarCore } from '@/lib/recording-core';
 
 export async function POST(req: NextRequest) {
   try {

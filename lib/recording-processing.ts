@@ -1,21 +1,12 @@
-/**
- * Background Processing Orchestrator
- * DashkaRecord v2.0.0-alpha - Phase 3
- * 
- * Handles async processing of recordings:
- * 1. Transcribe (Whisper)
- * 2. Convert to MP4
- * 3. Update metadata
- */
 
-import { webmToMp4 } from './convert';
+import { webmToMp4 } from '@/lib/recording-convert';
 import {
   readMetadata,
   recordProcessingError,
   updateMetadata,
   updateProcessingStatus
-} from './storage';
-import { transcribe } from './transcribe';
+} from '@/lib/recording-storage';
+import { transcribe } from '@/lib/recording-transcribe';
 
 /**
  * Process recording in background

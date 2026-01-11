@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createRecordingId, saveWebm, createMetadata } from '@/lib/storage';
-import { processRecording } from '@/lib/processing';
+import { createRecordingId, saveWebm, createMetadata } from '@/lib/recording-storage';
+import { processRecording } from '@/lib/recording-processing';
 
 export async function POST(req: NextRequest) {
   try {

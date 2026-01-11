@@ -25,11 +25,11 @@ model Recording {
   synced             Boolean   @default(false)
   errorStep          String?   @map("error_step")
   errorMessage       String?   @map("error_message")
+  
   errorAt            DateTime? @map("error_at") @db.Timestamptz(6)
-  createdAt          DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt          DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  
+  createdAt          DateTime  @default(now()) @map("created_at")
+  updatedAt          DateTime  @updatedAt      @map("updated_at")
 
-  @@index([createdAt])
-  @@index([status])
   @@map("recordings")
 }

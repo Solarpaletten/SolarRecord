@@ -1,5 +1,5 @@
 const navItems = [
   { href: '/', label: 'Главная' },
-  { href: '/listings', label: 'Объекты' },
-  { href: '/recording', label: 'Запись' },  // Добавить
+  { href: '/recording', label: 'Запись' },
+  { href: '/recording/records', label: 'Архив' },
 ];

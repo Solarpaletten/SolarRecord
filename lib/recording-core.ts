@@ -5,8 +5,8 @@
 
 import { promises as fs } from 'fs';
 import path from 'path';
-import { RecorderSyncRequest, RecorderSyncResponse } from '../types/recording';
-import { readMetadata, updateMetadata } from './storage';
+import { RecorderSyncRequest, RecorderSyncResponse } from '@/types';
+import { readMetadata, updateMetadata } from '@/lib/recording-storage';
 
 const SOLAR_CORE_URL = process.env.SOLAR_CORE_URL || 'http://localhost:8010';
 const SOLAR_CORE_API_KEY = process.env.SOLAR_CORE_API_KEY || '';

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { saveScreenshot } from '@/lib/storage';
+import { saveScreenshot } from '@/lib/recording-storage';
 
 export async function POST(req: NextRequest) {
   try {

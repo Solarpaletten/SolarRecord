@@ -1,11 +1,7 @@
-/**
- * Translation Service using DeepSeek API
- * DashkaRecord v2.0.0-alpha - Phase 3
- */
 
 import { promises as fs } from 'fs';
-import { TranslateRequest, TranslateResult } from '../types/recording';
-import { getRecordingPaths, readMetadata, updateMetadata } from './storage';
+import { TranslateRequest, TranslateResult } from '@/types';
+import { getRecordingPaths, readMetadata, updateMetadata } from '@/lib/recording-storage';
 
 const DEEPSEEK_API_KEY = process.env.DEEPSEEK_API_KEY || '';
 const DEEPSEEK_API_URL = 'https://api.deepseek.ai/v1/chat/completions';

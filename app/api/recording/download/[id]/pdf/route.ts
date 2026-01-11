@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { readFile, access } from 'fs/promises';
-import { readMetadata } from '@/lib/storage';
+import { readMetadata } from '@/lib/recording-storage';
 
 export async function GET(
   req: NextRequest,

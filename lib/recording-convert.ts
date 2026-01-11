@@ -8,7 +8,7 @@
 import ffmpeg from 'fluent-ffmpeg';
 import { promises as fs } from 'fs';
 import path from 'path';
-import { getRecordingPaths } from './storage';
+import { getRecordingPaths } from '@/lib/recording-storage';
 
 // Try to use @ffmpeg-installer if available
 try {

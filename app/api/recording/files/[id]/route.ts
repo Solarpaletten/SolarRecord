@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { readMetadata, deleteRecording } from '@/lib/storage';
+import { readMetadata, deleteRecording } from '@/lib/recording-storage';
 
 export async function GET(
   req: NextRequest,

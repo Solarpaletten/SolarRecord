@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { translateTranscript } from '@/lib/translate';
+import { translateTranscript } from '@/lib/recording-translate';
 
 export async function POST(req: NextRequest) {
   try {

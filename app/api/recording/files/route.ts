@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { listRecordings } from '@/lib/storage';
+import { listRecordings } from '@/lib/recording-storage';
 
 export async function GET() {
   try {

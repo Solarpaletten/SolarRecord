@@ -1,19 +1,12 @@
-/**
- * Whisper Transcription Adapter
- * DashkaRecord v2.0.0-alpha - Phase 3
- * 
- * Supports multiple modes:
- * - subprocess: Call Python script with Whisper
- * - node: Use whisper-node (if available)
- * - cloud: Use OpenAI Whisper API
- */
 
 import { exec } from 'child_process';
 import { promises as fs } from 'fs';
 import path from 'path';
 import { promisify } from 'util';
-import { TranscribeResult, WhisperConfig, WhisperMode } from '../types/recording';
-import { getRecordingPaths } from './storage';
+import { TranscribeResult, WhisperConfig, WhisperMode } from '@/types';
+import { getRecordingPaths } from '@/lib/recording-storage';
+
+const PYTHON_BIN = path.join(process.cwd(), 'venv/bin/python3');
 
 const execPromise = promisify(exec);
 
@@ -98,7 +91,10 @@ async function transcribeSubprocess(
 
   const outTextPath = `${videoPath}.transcript.json`;
 
-  let command = `python3 ${scriptPath} --input "${videoPath}" --output "${outTextPath}" --model ${config.model}`;
+  let command = `"${PYTHON_BIN}" ${scriptPath} --input "${videoPath}" --output "${outTextPath}" --model ${config.model}`;
+
+
+  
 
   if (config.language) {
     command += ` --language ${config.language}`;
@@ -264,12 +260,12 @@ export async function checkWhisperAvailability(): Promise<{
         await fs.access(scriptPath);
 
         // Try to run python
-        await execPromise('python3 --version');
+        await execPromise(`"${PYTHON_BIN}" --version`);
 
         return {
           available: true,
           mode: 'subprocess',
-          message: 'Python + Whisper script available',
+          message: 'Python venv + Whisper available',
         };
       } catch {
         return {

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { readFile, access } from 'fs/promises';
-import { readMetadata } from '@/lib/storage';
-import { webmToMp4 } from '@/lib/convert';
+import { readMetadata } from '@/lib/recording-storage';
+import { webmToMp4 } from '@/lib/recording-convert';
 
 export async function GET(
   req: NextRequest,
@@ -17,13 +17,14 @@ export async function GET(
       );
     }
 
-    let mp4Path = metadata.mp4Path;
+    //
+    let mp4Path: string | null = metadata.mp4Path ?? null;
 
     // If MP4 doesn't exist, convert on-demand
     if (!mp4Path) {
       console.log(`🔄 On-demand MP4 conversion for: ${params.id}`);
       mp4Path = await webmToMp4(params.id);
-      
+
       if (!mp4Path) {
         return NextResponse.json(
           { error: 'MP4 conversion failed. Check if WebM exists and FFmpeg is installed.' },
@@ -31,14 +32,12 @@ export async function GET(
         );
       }
     } else {
-      // Check if file exists
       try {
         await access(mp4Path);
       } catch {
-        // File missing, try conversion
         console.log(`⚠️ MP4 file missing, reconverting: ${params.id}`);
         mp4Path = await webmToMp4(params.id);
-        
+
         if (!mp4Path) {
           return NextResponse.json(
             { error: 'MP4 file not found and conversion failed' },

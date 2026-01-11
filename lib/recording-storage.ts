@@ -5,7 +5,7 @@
 
 import { promises as fs } from 'fs';
 import path from 'path';
-import { ProcessingStatus, RecordingMetadata, Screenshot } from '../types/recording';
+import { ProcessingStatus, RecordingMetadata, Screenshot } from '@/types';
 
 // Base upload directory (can be configured via env variable)
 const UPLOAD_DIR = process.env.UPLOAD_DIR || path.join(process.cwd(), 'uploads');
