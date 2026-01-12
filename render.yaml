@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: solar-recorder
+    env: node
+    buildCommand: pnpm install && pnpm build
+    startCommand: pnpm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: WHISPER_MODE
+        value: cloud
