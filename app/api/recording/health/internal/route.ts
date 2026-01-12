@@ -1,32 +1,32 @@
 import { NextResponse } from 'next/server';
-import { prisma } from '@/lib/db';
-
-export async function HEAD() {
-  return new Response(null, { status: 200 });
-}
+import { promises as fs } from 'fs';
+import path from 'path';
 
 export async function GET() {
-  const start = Date.now();
-
   try {
-    await prisma.recording.count();
+    // Check uploads directory exists
+    const uploadsPath = path.join(process.cwd(), 'uploads');
+    await fs.access(uploadsPath);
+    
+    // Count metadata files
+    const metadataPath = path.join(uploadsPath, 'metadata');
+    let recordingCount = 0;
+    try {
+      const files = await fs.readdir(metadataPath);
+      recordingCount = files.filter(f => f.endsWith('.json')).length;
+    } catch {
+      // metadata folder may not exist yet
+    }
 
     return NextResponse.json({
-      status: 'ok',
-      db: 'connected',
-      service: 'solar-record',
-      env: process.env.NODE_ENV,
+      status: 'healthy',
+      storage: 'ok',
+      recordings: recordingCount,
       timestamp: new Date().toISOString(),
-      responseTimeMs: Date.now() - start,
     });
-  } catch (e) {
+  } catch (error) {
     return NextResponse.json(
-      {
-        status: 'error',
-        db: 'disconnected',
-        error: String(e),
-        timestamp: new Date().toISOString(),
-      },
+      { status: 'unhealthy', error: (error as Error).message },
       { status: 500 }
     );
   }
