@@ -1,7 +1,6 @@
 "use client";
 import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
 
 export default function Recorder() {
   const [recording, setRecording] = useState(false);
@@ -9,27 +8,27 @@ export default function Recorder() {
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [recordingId, setRecordingId] = useState<string | null>(null);
-
+  
   const [recordingMode, setRecordingMode] = useState<"screen" | "tab">("screen");
   const [audioLevel, setAudioLevel] = useState(0);
   const [recordingTime, setRecordingTime] = useState(0);
-
+  
   const [screenshots, setScreenshots] = useState<string[]>([]);
   const [screenshotCount, setScreenshotCount] = useState(0);
   const [capturingScreenshot, setCapturingScreenshot] = useState(false);
   const [showScreenshotSuccess, setShowScreenshotSuccess] = useState(false);
-
+  
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<BlobPart[]>([]);
   const displayStreamRef = useRef<MediaStream | null>(null);
   const audioStreamRef = useRef<MediaStream | null>(null);
-
+  
   const audioContextRef = useRef<AudioContext | null>(null);
   const analyserRef = useRef<AnalyserNode | null>(null);
   const animationFrameRef = useRef<number | null>(null);
   const timerIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const lastScreenshotTimeRef = useRef<number>(0);
-
+  
   const router = useRouter();
 
   useEffect(() => {
@@ -47,28 +46,20 @@ export default function Recorder() {
     };
   }, []);
 
-  const [isMobile, setIsMobile] = useState(false);
-
-  useEffect(() => {
-    if (typeof navigator !== 'undefined') {
-      setIsMobile(/iPhone|iPad|iPod|Android/i.test(navigator.userAgent));
-    }
-  }, []);
-
   const setupAudioMonitoring = (stream: MediaStream) => {
     try {
       const audioContext = new AudioContext();
       const analyser = audioContext.createAnalyser();
       const microphone = audioContext.createMediaStreamSource(stream);
-
+      
       analyser.fftSize = 256;
       analyser.smoothingTimeConstant = 0.8;
-
+      
       microphone.connect(analyser);
-
+      
       audioContextRef.current = audioContext;
       analyserRef.current = analyser;
-
+      
       updateAudioLevel();
     } catch (err) {
       console.error("Audio monitoring setup failed:", err);
@@ -77,15 +68,15 @@ export default function Recorder() {
 
   const updateAudioLevel = () => {
     if (!analyserRef.current) return;
-
+    
     const dataArray = new Uint8Array(analyserRef.current.frequencyBinCount);
     analyserRef.current.getByteFrequencyData(dataArray);
-
+    
     const average = dataArray.reduce((a, b) => a + b, 0) / dataArray.length;
     const normalized = Math.min(100, (average / 255) * 100);
-
+    
     setAudioLevel(normalized);
-
+    
     animationFrameRef.current = requestAnimationFrame(updateAudioLevel);
   };
 
@@ -107,7 +98,7 @@ export default function Recorder() {
     const hrs = Math.floor(seconds / 3600);
     const mins = Math.floor((seconds % 3600) / 60);
     const secs = seconds % 60;
-
+    
     if (hrs > 0) {
       return `${hrs}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
     }
@@ -132,75 +123,75 @@ export default function Recorder() {
       console.log("📸 Capturing screenshot...");
 
       const videoTrack = displayStreamRef.current.getVideoTracks()[0];
-
+      
       if (typeof ImageCapture !== 'undefined') {
         const imageCapture = new (window as any).ImageCapture(videoTrack);
         const bitmap = await imageCapture.grabFrame();
-
+        
         const canvas = document.createElement('canvas');
         canvas.width = bitmap.width;
         canvas.height = bitmap.height;
-
+        
         const ctx = canvas.getContext('2d');
         if (!ctx) throw new Error("Canvas context not available");
-
+        
         ctx.drawImage(bitmap, 0, 0);
-
+        
         const blob = await new Promise<Blob>((resolve) => {
           canvas.toBlob((b) => resolve(b!), 'image/png');
         });
-
+        
         await uploadScreenshot(blob);
-
+        
         const thumbnailUrl = URL.createObjectURL(blob);
         setScreenshots(prev => [...prev, thumbnailUrl]);
         setScreenshotCount(prev => prev + 1);
-
+        
         setShowScreenshotSuccess(true);
         setTimeout(() => setShowScreenshotSuccess(false), 1000);
-
+        
         console.log("✅ Screenshot captured successfully");
-
+        
       } else {
         console.log("⚠️ ImageCapture not available, using Canvas fallback");
-
+        
         const video = document.createElement('video');
         video.srcObject = displayStreamRef.current;
         video.muted = true;
-
+        
         await new Promise((resolve) => {
           video.onloadedmetadata = resolve;
           video.play();
         });
-
+        
         const canvas = document.createElement('canvas');
         canvas.width = video.videoWidth;
         canvas.height = video.videoHeight;
-
+        
         const ctx = canvas.getContext('2d');
         if (!ctx) throw new Error("Canvas context not available");
-
+        
         ctx.drawImage(video, 0, 0);
-
+        
         const blob = await new Promise<Blob>((resolve) => {
           canvas.toBlob((b) => resolve(b!), 'image/png');
         });
-
+        
         video.pause();
         video.srcObject = null;
-
+        
         await uploadScreenshot(blob);
-
+        
         const thumbnailUrl = URL.createObjectURL(blob);
         setScreenshots(prev => [...prev, thumbnailUrl]);
         setScreenshotCount(prev => prev + 1);
-
+        
         setShowScreenshotSuccess(true);
         setTimeout(() => setShowScreenshotSuccess(false), 1000);
-
+        
         console.log("✅ Screenshot captured (fallback method)");
       }
-
+      
     } catch (err) {
       console.error("❌ Screenshot capture error:", err);
       setError("Screenshot capture failed");
@@ -214,25 +205,25 @@ export default function Recorder() {
       const formData = new FormData();
       const timestamp = Date.now();
       const filename = `screenshot_${timestamp}.png`;
-
+      
       formData.append('file', blob, filename);
       formData.append('recording_id', recordingId!);
       formData.append('timestamp', recordingTime.toString());
-
+      
       console.log(`📤 Uploading screenshot: ${filename} (${blob.size} bytes)`);
-
+      
       const response = await fetch('/api/recording/screenshot', {
         method: 'POST',
         body: formData
       });
-
+      
       if (!response.ok) {
         throw new Error(`Screenshot upload failed: ${response.status}`);
       }
-
+      
       const data = await response.json();
       console.log("✅ Screenshot uploaded:", data);
-
+      
     } catch (err) {
       console.error("❌ Screenshot upload error:", err);
       throw err;
@@ -242,12 +233,12 @@ export default function Recorder() {
   const startRecording = async () => {
     try {
       setError(null);
-
+      
       console.log("🎬 Starting recording...");
       console.log("Mode:", recordingMode);
-
+      
       const captureTabAudio = recordingMode === "tab";
-
+      
       const displayStream = await navigator.mediaDevices.getDisplayMedia({
         video: {
           width: { ideal: 1920 },
@@ -259,9 +250,9 @@ export default function Recorder() {
           noiseSuppression: true
         } : false
       });
-
+      
       console.log("✅ Display stream obtained");
-
+      
       const audioStream = await navigator.mediaDevices.getUserMedia({
         audio: {
           echoCancellation: true,
@@ -271,67 +262,67 @@ export default function Recorder() {
           channelCount: 2
         }
       });
-
+      
       console.log("✅ Audio stream obtained");
-
+      
       setupAudioMonitoring(audioStream);
       startTimer();
-
+      
       const videoTracks = displayStream.getVideoTracks();
       const tabAudioTracks = displayStream.getAudioTracks();
       const micAudioTracks = audioStream.getAudioTracks();
-
+      
       const combinedStream = new MediaStream([
         ...videoTracks,
         ...tabAudioTracks,
         ...micAudioTracks
       ]);
-
+      
       console.log("✅ Combined stream created:", {
         videoTracks: videoTracks.length,
         tabAudioTracks: tabAudioTracks.length,
         micAudioTracks: micAudioTracks.length
       });
-
+      
       displayStreamRef.current = displayStream;
       audioStreamRef.current = audioStream;
       chunksRef.current = [];
-
+      
       const recorder = new MediaRecorder(combinedStream, {
         mimeType: "video/webm;codecs=vp8,opus",
         videoBitsPerSecond: 2500000,
         audioBitsPerSecond: 128000
       });
-
+      
       recorder.ondataavailable = (e) => {
         if (e.data.size > 0) {
           chunksRef.current.push(e.data);
           console.log(`📦 Chunk received: ${e.data.size} bytes`);
         }
       };
-
+      
       recorder.onstop = async () => {
         console.log("🛑 Recording stopped");
         stopTimer();
-
+        
         if (animationFrameRef.current) {
           cancelAnimationFrame(animationFrameRef.current);
         }
-
+        
         if (audioContextRef.current) {
           audioContextRef.current.close();
         }
-
+        
         const blob = new Blob(chunksRef.current, { type: "video/webm" });
         const url = URL.createObjectURL(blob);
         setVideoUrl(url);
-
+        
         console.log(`✅ Video blob created: ${blob.size} bytes`);
-
+        
         stopAllStreams();
         await uploadVideo(blob);
       };
-
+      
       recorder.onerror = (e) => {
         console.error("❌ MediaRecorder error:", e);
         setError("Recording error occurred");
@@ -339,19 +330,19 @@ export default function Recorder() {
         stopTimer();
         stopAllStreams();
       };
-
+      
       displayStream.getVideoTracks()[0].onended = () => {
         console.log("📺 Screen sharing ended by user");
         if (recording) {
           stopRecording();
         }
       };
-
+      
       mediaRecorderRef.current = recorder;
       recorder.start(1000);
       setRecording(true);
       console.log("▶️ Recording started!");
-
+      
     } catch (err) {
       console.error("❌ Error starting recording:", err);
       if (err instanceof Error) {
@@ -384,7 +375,7 @@ export default function Recorder() {
       });
       displayStreamRef.current = null;
     }
-
+    
     if (audioStreamRef.current) {
       audioStreamRef.current.getTracks().forEach(track => {
         track.stop();
@@ -398,26 +389,26 @@ export default function Recorder() {
     try {
       setUploading(true);
       setError(null);
-
+      
       const formData = new FormData();
       formData.append("file", blob, "recording.webm");
-
+      
       console.log(`📤 Uploading ${blob.size} bytes...`);
-
+      
       const response = await fetch('/api/recording/upload', {
         method: "POST",
         body: formData
       });
-
+      
       if (!response.ok) {
         throw new Error(`Upload failed: ${response.status}`);
       }
-
+      
       const data = await response.json();
       setRecordingId(data.recording_id);
-
+      
       console.log("✅ Upload successful:", data);
-
+      
     } catch (err) {
       console.error("❌ Upload error:", err);
       setError(err instanceof Error ? err.message : "Upload failed");
@@ -441,30 +432,6 @@ export default function Recorder() {
     setScreenshots([]);
     setScreenshotCount(0);
   };
-
-  if (isMobile) {
-    return (
-      <div className="max-w-xl mx-auto mt-10 p-6 rounded-xl border border-yellow-200 bg-yellow-50 text-center">
-        <h2 className="text-lg font-semibold text-yellow-800 mb-2">
-          📱 Mobile device detected
-        </h2>
-
-        <p className="text-yellow-700 mb-4">
-          Screen recording is available only on desktop browsers.
-          <br />
-          You can view and download your recordings in the Library.
-        </p>
-
-        <Link
-          href="/recording/records"
-          className="inline-block px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition"
-        >
-          → Go to Recordings Library
-        </Link>
-      </div>
-    );
-  }
-
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex flex-col items-center justify-center p-6">
@@ -510,7 +477,7 @@ export default function Recorder() {
                   </p>
                 </div>
               </label>
-
+              
               <label className="flex items-start space-x-3 cursor-pointer group">
                 <input
                   type="radio"
@@ -548,7 +515,7 @@ export default function Recorder() {
                 {formatTime(recordingTime)}
               </div>
             </div>
-
+            
             {/* VU Meter */}
             <div className="space-y-2 mb-4">
               <div className="flex items-center justify-between text-sm text-gray-600">
@@ -560,21 +527,22 @@ export default function Recorder() {
               </div>
               <div className="w-full h-4 bg-gray-200 rounded-full overflow-hidden shadow-inner">
                 <div
-                  className={`h-full transition-all duration-100 ${audioLevel > 70 ? 'bg-red-500' :
-                      audioLevel > 40 ? 'bg-yellow-500' :
-                        audioLevel > 10 ? 'bg-green-500' :
-                          'bg-gray-400'
-                    }`}
+                  className={`h-full transition-all duration-100 ${
+                    audioLevel > 70 ? 'bg-red-500' :
+                    audioLevel > 40 ? 'bg-yellow-500' :
+                    audioLevel > 10 ? 'bg-green-500' :
+                    'bg-gray-400'
+                  }`}
                   style={{ width: `${audioLevel}%` }}
                 ></div>
               </div>
               <p className="text-xs text-gray-500 text-center">
                 {audioLevel < 10 ? '🔇 Speak louder for better audio quality' :
-                  audioLevel > 70 ? '🔊 Good level!' :
-                    '✓ Audio detected'}
+                 audioLevel > 70 ? '🔊 Good level!' :
+                 '✓ Audio detected'}
               </p>
             </div>
-
+            
             {/* Screenshot Button */}
             <div className="flex items-center justify-center space-x-4">
               <button
@@ -583,8 +551,8 @@ export default function Recorder() {
                 className={`
                   px-6 py-3 rounded-lg font-semibold text-white
                   transition-all duration-300 transform
-                  ${capturingScreenshot
-                    ? 'bg-gray-400 cursor-not-allowed'
+                  ${capturingScreenshot 
+                    ? 'bg-gray-400 cursor-not-allowed' 
                     : 'bg-purple-600 hover:bg-purple-700 hover:scale-105 shadow-lg'
                   }
                   ${showScreenshotSuccess ? 'animate-pulse' : ''}
@@ -598,7 +566,7 @@ export default function Recorder() {
                 )}
               </button>
             </div>
-
+            
             {/* Screenshot Success Animation */}
             {showScreenshotSuccess && (
               <div className="mt-3 text-center">
@@ -607,7 +575,7 @@ export default function Recorder() {
                 </span>
               </div>
             )}
-
+            
             <div className="mt-3 text-sm text-red-600 text-center">
               {recordingMode === "tab" ? "🎵 Recording tab audio + microphone" : "🎙️ Recording screen + microphone"}
             </div>
@@ -652,8 +620,8 @@ export default function Recorder() {
                   px-8 py-4 rounded-xl text-white font-semibold text-lg
                   transition-all duration-300 transform hover:scale-105
                   disabled:opacity-50 disabled:cursor-not-allowed
-                  ${recording
-                    ? "bg-red-500 hover:bg-red-600 shadow-lg shadow-red-200"
+                  ${recording 
+                    ? "bg-red-500 hover:bg-red-600 shadow-lg shadow-red-200" 
                     : "bg-blue-600 hover:bg-blue-700 shadow-lg shadow-blue-200"
                   }
                 `}
@@ -677,7 +645,7 @@ export default function Recorder() {
               </button>
             </div>
           )}
-
+          
           <button
             onClick={viewRecordings}
             className="text-blue-600 hover:text-blue-800 font-medium text-sm underline"

@@ -11,7 +11,7 @@ import { ProcessingStatus, RecordingMetadata, Screenshot } from '@/types';
 const UPLOAD_DIR = process.env.UPLOAD_DIR || path.join(process.cwd(), 'uploads');
 
 // Directories
-const UPLOAD_BASE = path.join(process.cwd(), 'uploads');
+const UPLOAD_BASE = UPLOAD_DIR;
 const VIDEO_DIR = path.join(UPLOAD_BASE, 'video');
 const MP4_DIR = path.join(UPLOAD_BASE, 'mp4');
 const TRANSCRIPT_DIR = path.join(UPLOAD_BASE, 'transcripts');
