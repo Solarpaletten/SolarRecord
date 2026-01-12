@@ -1,155 +1,115 @@
-# 🎥 DashkaRecord v2.0.0-alpha
+# ☀️ SolarRecord v2.0.0-alpha
 
-**Phase 3: Real Backend Implementation - COMPLETE** ✅
+Local screen recording with AI-powered transcription.
 
-Next.js Monorepo with full AI transcription and MP4 conversion.
+## Overview
 
----
+SolarRecord captures screen recordings in the browser, transcribes audio using OpenAI Whisper, and syncs results to Solar Core ERP.
 
-## 🚀 Quick Start
+## Tech Stack
 
-### 1. Prerequisites
+| Layer | Technology |
+|-------|------------|
+| Frontend | Next.js 14, React 18, TypeScript, Tailwind CSS |
+| Backend | Next.js API Routes |
+| AI | OpenAI Whisper (subprocess) |
+| Media | FFmpeg, MediaRecorder API |
+| Storage | Local filesystem |
 
-**Required:**
-- Node.js 20+
-- npm
-- FFmpeg (for MP4 conversion)
+## Processing Pipeline
+```
+Browser Recording
+       ↓
+   POST /api/recording/upload
+       ↓
+   Save WebM → Create Metadata
+       ↓
+   Background Processing
+       ├── 1. Whisper Transcription (venv/python3)
+       ├── 2. Language Detection (auto)
+       ├── 3. MP4 Conversion (ffmpeg)
+       └── 4. Status Update
+       ↓
+   UI Refresh → Share/Sync
+```
 
-**For Whisper (subprocess mode):**
-- Python 3.8+
-- pip
-
-**Optional:**
-- DeepSeek API key (for translation)
-- Solar Core ERP (for sync)
-
-### 2. Installation
-
+## Quick Start
 ```bash
-# Install Node.js dependencies
-npm install
+# 1. Install Node dependencies
+pnpm install
 
-# Setup environment
-cp .env.local.example .env.local
-# Edit .env.local with your settings
-
-# Install Python dependencies (for Whisper subprocess mode)
-pip install -r requirements.txt
-
-# Install FFmpeg (if not already installed)
-# macOS: brew install ffmpeg
-# Ubuntu: sudo apt install ffmpeg
-```
-
-### 3. Run
-
-```bash
-npm run dev
-```
-
-Access: **http://localhost:3000**
-
----
-
-## 📊 API Endpoints (All Working ✅)
-
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/api/health` | GET | Health check |
-| `/api/upload` | POST | Upload WebM + trigger processing |
-| `/api/files` | GET | List recordings |
-| `/api/files/[id]` | GET/DELETE | Get/Delete recording |
-| `/api/download/[id]/webm` | GET | Download WebM |
-| `/api/download/[id]/mp4` | GET | Download MP4 |
-| `/api/translate` | POST | Translate transcript |
-| `/api/sync` | POST | Sync to Solar Core |
-| `/api/screenshot` | POST | Upload screenshot |
-
----
-
-## 🔄 Processing Pipeline
-
-```
-Upload → Background Processing:
-  1. Transcribe (Whisper) → .txt
-  2. Convert MP4 (FFmpeg) → .mp4
-  3. Update metadata → complete
-```
-
----
-
-## 🧪 Testing End-to-End
-
-```bash
-# 1. Start server
-npm run dev
-
-# 2. Record video at http://localhost:3000
-- Click "Start Recording"
-- Grant permissions
-- Stop recording
-
-# 3. Check /records
-- Recording appears
-- Wait for processing (30-60s)
-- Download buttons active
-
-# 4. Verify files
-ls uploads/metadata/*.json
-ls uploads/video/*.webm
-ls uploads/transcripts/*.txt
-ls uploads/mp4/*.mp4
-```
-
----
-
-## ⚙️ Configuration (.env.local)
-
-```bash
-WHISPER_MODE=subprocess        # subprocess | cloud
-WHISPER_MODEL=base             # tiny | base | small | medium | large
-DEEPSEEK_API_KEY=your_key      # For translation
-SOLAR_CORE_URL=http://localhost:8010
-```
-
----
-
-## 🐛 Troubleshooting
-
-**Transcription fails?**
-```bash
-# Check Python & Whisper
-python3 --version
+# 2. Setup Python environment for Whisper
+python3 -m venv venv
+source venv/bin/activate
 pip install openai-whisper
-python3 scripts/transcribe.py --help
-```
 
-**MP4 conversion fails?**
-```bash
-# Install FFmpeg
-brew install ffmpeg  # macOS
-sudo apt install ffmpeg  # Ubuntu
+# 3. Verify FFmpeg
 ffmpeg -version
+
+# 4. Run
+pnpm dev
 ```
 
+Open: http://localhost:3000/recording
+
+## Environment Variables
+```env
+# Whisper Configuration
+WHISPER_MODE=subprocess     # subprocess | cloud | node
+WHISPER_MODEL=base          # tiny | base | small | medium | large
+
+# Cloud Mode (optional)
+OPENAI_API_KEY=sk-...       # Required only for WHISPER_MODE=cloud
+
+# Solar Core Integration (optional)
+SOLAR_CORE_URL=https://...
+SOLAR_CORE_API_KEY=...
+```
+
+## Whisper Modes
+
+| Mode | Requirements | Use Case |
+|------|--------------|----------|
+| `subprocess` | Python 3 + venv + openai-whisper | Local development |
+| `cloud` | OpenAI API key | Production / serverless |
+| `node` | Not implemented | Future |
+
+## Project Structure
+```
+SolarRecord/
+├── app/
+│   ├── recording/              # Pages
+│   │   ├── page.tsx            # Recorder UI
+│   │   └── records/page.tsx    # Library UI
+│   └── api/recording/          # API routes
+├── components/recording/       # React components
+├── lib/                        # Core services
+│   ├── recording-processing.ts # Orchestrator
+│   ├── recording-transcribe.ts # Whisper adapter
+│   ├── recording-convert.ts    # FFmpeg adapter
+│   └── recording-storage.ts    # File system
+├── scripts/
+│   └── transcribe.py           # Python Whisper script
+├── uploads/                    # Local file storage
+└── venv/                       # Python environment
+```
+
+## Documentation
+
+- [Architecture](docs/ARCHITECTURE.md)
+- [Pipeline](docs/PIPELINE.md)
+- [Deployment](docs/DEPLOYMENT.md)
+
+## Team
+
+| Role | Name |
+|------|------|
+| Architect | Leanid |
+| Senior Coordinator | Dashka |
+| Engineer | Claude |
+
 ---
 
-## 📦 Dependencies
+☀️ **SOLAR Team** — IT с AI мышлением
 
-**Node.js:**
-- next, react, fluent-ffmpeg
-
-**Python:**
-- openai-whisper, torch
-
----
-
-## 👥 Team
-
-Solar AI | IT | Team
-
-**Built with Next.js Monorepo - One Runtime 🚀**
-
-git add .
-git commit -m "🎉 feat: SolarRecord v2.0.0-alpha complete - full transcription pipeline"
-git tag v2.0.0-alpha
+v2.0.0-alpha | January 2026
